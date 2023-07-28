@@ -43,6 +43,7 @@ contract CaviarFeeManager is OwnableUpgradeable {
 
     uint256 public feeStaking;
     uint256 public feeTngbl;
+    uint256 public feeRebaseVault;
     uint256 public feeMultiplier;
 
     address public pairSecondReward;
@@ -51,6 +52,8 @@ contract CaviarFeeManager is OwnableUpgradeable {
     address public pearlPair;
 
     address public pairSecondRewarder;
+
+    address public incentiveVault;
 
     modifier keeper {
         require(isKeeper[msg.sender] == true || msg.sender == owner(), 'not keeper');
@@ -203,6 +206,11 @@ contract CaviarFeeManager is OwnableUpgradeable {
         treasury = _treasury;
     }
 
+    function setIncentiveVault(address _vault) external onlyOwner {
+        require(_vault != address(0), 'addr 0');
+        incentiveVault = _vault;
+    }
+
     function setCaviarManager(address _caviarManager) external onlyOwner {
         require(_caviarManager != address(0), 'addr 0');
         caviarManager = _caviarManager;
@@ -221,14 +229,20 @@ contract CaviarFeeManager is OwnableUpgradeable {
     function setFees(
         uint256 _feeStaking, 
         uint256 _feeTngbl, 
+        uint256 _feeRebaseVault,
         uint256 _feeMultiplier
     ) external onlyOwner {
         require(
             _feeStaking + _feeTngbl == _feeMultiplier,
             "Invalid fee values"
         );
+        require(
+            _feeRebaseVault <= _feeMultiplier,
+            "Invalid fee values"
+        );
         feeStaking = _feeStaking;
         feeTngbl = _feeTngbl;
+        feeRebaseVault = _feeRebaseVault;
         feeMultiplier = _feeMultiplier;
     }
 
@@ -260,12 +274,12 @@ contract CaviarFeeManager is OwnableUpgradeable {
         }
         uint256 _caviarStaked = IERC20(caviar).balanceOf(caviarChef);
         uint256 _caviarTotal = _caviarBalance.add(_caviarStaked);
-        uint256 _amountTngbl = _amount.mul(feeTngbl).div(feeMultiplier);
+        uint256 _amountVault = _amount.mul(feeRebaseVault).div(feeMultiplier);
         uint256 _amountLeft = _amount;
 
-        if(treasury != address(0)) {
-            IERC20(caviar).safeTransfer(treasury, _amountTngbl);
-            _amountLeft = _amount.sub(_amountTngbl);
+        if(incentiveVault != address(0)) {
+            IERC20(caviar).safeTransfer(incentiveVault, _amountVault);
+            _amountLeft = _amount.sub(_amountVault);
         }
 
         uint256 _amountSecondReward = _amountLeft.mul(_caviarBalance).div(_caviarTotal);
