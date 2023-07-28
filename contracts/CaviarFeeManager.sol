@@ -42,7 +42,6 @@ contract CaviarFeeManager is OwnableUpgradeable {
     IRouter01.route[] public usdrToUsdcRoute;
 
     uint256 public feeStaking;
-    uint256 public feeSecondReward;
     uint256 public feeTngbl;
     uint256 public feeMultiplier;
 
@@ -221,16 +220,14 @@ contract CaviarFeeManager is OwnableUpgradeable {
 
     function setFees(
         uint256 _feeStaking, 
-        uint256 _feeSecondReward, 
         uint256 _feeTngbl, 
         uint256 _feeMultiplier
     ) external onlyOwner {
         require(
-            _feeStaking + _feeSecondReward + _feeTngbl == _feeMultiplier,
+            _feeStaking + _feeTngbl == _feeMultiplier,
             "Invalid fee values"
         );
         feeStaking = _feeStaking;
-        feeSecondReward = _feeSecondReward;
         feeTngbl = _feeTngbl;
         feeMultiplier = _feeMultiplier;
     }
@@ -255,7 +252,12 @@ contract CaviarFeeManager is OwnableUpgradeable {
     }
 
     function distributeRebaseFees(uint256 _amount) external restricted {
-        uint256 _caviarBalance = IPearlPair(pearlPair).reserve0();
+        uint256 _caviarBalance;
+        if (caviar == IPearlPair(pearlPair).token0()) {
+            _caviarBalance = IPearlPair(pearlPair).reserve0();
+        } else {
+            _caviarBalance = IPearlPair(pearlPair).reserve1();
+        }
         uint256 _caviarStaked = IERC20(caviar).balanceOf(caviarChef);
         uint256 _caviarTotal = _caviarBalance.add(_caviarStaked);
         uint256 _amountTngbl = _amount.mul(feeTngbl).div(feeMultiplier);

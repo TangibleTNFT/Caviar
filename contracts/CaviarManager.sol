@@ -43,8 +43,6 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     uint256 public beginTimestamp;
 
-    uint256 public supplyPercentageLimit;
-
     uint256 public caviarSupplyAtCurrentEpoch;
 
     mapping(uint256 => uint256) public mintedFromNftAt;
@@ -97,7 +95,6 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         MAX_VE_DEPOSIT_FEE = 700;
         MULTIPLIER = 1000;
 
-        supplyPercentageLimit = 150;
         REDEEM_FEE = 35;
 
         smartWalletWhitelist = _smartWalletWhitelist;
@@ -217,16 +214,12 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (isPromotionPeriod) {
             _depositFee = PROMO_VE_DEPOSIT_FEE;
         } else {
-            require(capAvailableToDeposit(_tokenId), "Cap limited");
             _depositFee = getCurrentDepositFee();
         }
 
         (int128 _lockedAmount,) = IVePearl(vePearl).locked(_tokenId);
         uint256 _locked = _int128ToUint256(_lockedAmount);
 
-        // uint256 _toMint = IVePearl(vePearl).balanceOfNFT(_tokenId)
-        //     .mul(MULTIPLIER - _depositFee)
-        //     .div(MULTIPLIER);            
         uint256 _toMint = _locked
             .mul(MULTIPLIER - _depositFee)
             .div(MULTIPLIER);
@@ -266,21 +259,6 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // --- Getters ---
-
-    function capAvailableToDeposit(uint256 _tokenId) public view returns (bool isAvailable) {
-        uint256 _supplyLimit = caviarSupplyAtCurrentEpoch.mul(supplyPercentageLimit).div(MULTIPLIER);
-        
-        (int128 _lockedAmount,) = IVePearl(vePearl).locked(_tokenId);
-        uint256 _locked = _int128ToUint256(_lockedAmount);
-
-        uint256 _toMint = _locked
-            .mul(MULTIPLIER - getCurrentDepositFee())
-            .div(MULTIPLIER);
-        
-        if (mintedFromNftAt[getCurrentEpoch()] + _toMint > _supplyLimit) return false;
-
-        return true;
-    }
 
     function getCurrentDepositFee() public view returns (uint256) {
         if (isPromotionPeriod) return PROMO_VE_DEPOSIT_FEE;

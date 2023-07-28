@@ -207,7 +207,7 @@ contract CaviarChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         user.amount = user.amount.sub(amount);
 
         if (address(rewarder) != address(0)) {
-            rewarder.onReward(rewarderPid, to, to, 0, user.amount);
+            rewarder.onReward(rewarderPid, msg.sender, to, 0, user.amount);
         }
 
         underlying.safeTransfer(to, amount);

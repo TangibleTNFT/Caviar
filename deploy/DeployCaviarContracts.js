@@ -10,6 +10,7 @@ async function main() {
   const smartWalletWhitelist_address =
     "";
   const beginTimestamp = "";
+  const usdrAddress = "";
   let tx;
 
   const [deployer] = await ethers.getSigners();
@@ -54,17 +55,14 @@ async function main() {
   const CaviarChef = await ethers.getContractFactory(
     "CaviarChef"
   );
-  const caviarChef = await upgrades.deployProxy(
-    CaviarChef,
-    [
-      "CaviarChef",
-      caviar.address,
-      caviar.address,
-      caviarChefRewardSeeder.address,
-      7 * 86400,
-      smartWalletWhitelist_address
-    ]
-  );
+  const caviarChef = await upgrades.deployProxy(CaviarChef, [
+    "CaviarChef",
+    usdrAddress,
+    caviar.address,
+    caviarChefRewardSeeder.address,
+    7 * 86400,
+    smartWalletWhitelist_address,
+  ]);
   console.log(
     "CaviarChef address: ",
     caviarChef.address
