@@ -19,7 +19,7 @@ contract caviar is ERC20 {
         public
         ERC20(
             "CAVIAR",
-            "CAVIAR"
+            "CVR"
         )
     {
         operator = msg.sender;
