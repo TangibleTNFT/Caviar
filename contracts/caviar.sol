@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.6.12;
-
+/* 
+This version has been in use since our initial launch, and throughout this period, we have found no compelling reasons to pursue an upgrade.
+From my perspective, version 0.6.12 stands out as the epitome of stability in Solidity. The majority of well-secured Solidity codes have been authored in this particular version. Given this, we believe that our current employment of this version suffices perfectly for the smart contracts associated with Caviar.
+*/
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
