@@ -34,8 +34,6 @@ contract CaviarFeeManager is OwnableUpgradeable {
     address public caviarManager;
 
     mapping(address => bool) public isToken;
-    mapping(address => uint256) internal tokenPos;
-    mapping(address => IRouter01.route) public tokenToRoutes;
     mapping(address => bool) public isKeeper;
 
     address public caviar;
@@ -162,6 +160,12 @@ contract CaviarFeeManager is OwnableUpgradeable {
             }
             isToken[_route[0].from] = true;
             tokens.push(_route[0].from);
+        }
+    }
+    
+    function setUsdrToUsdcRoute(IRouter01.route[] memory _route) public onlyOwner {
+        for (uint i; i < _route.length; i++) {
+            usdrToUsdcRoute.push(_route[i]);
         }
     }
 
