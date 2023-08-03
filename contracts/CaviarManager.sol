@@ -123,7 +123,7 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // --- Setters ---
 
-    function initialLock() public {
+    function _initialLock() internal {
         require(msg.sender == owner() || msg.sender == address(this), "!auth");
 
         //create new lock
@@ -142,7 +142,7 @@ contract CaviarManager is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             //increase amount
             ICaviarStrategy(strategy).increaseAmount(_amount);
         } else {
-            initialLock();
+            _initialLock();
         }
         emit IncreaseAmount(_amount);
     }

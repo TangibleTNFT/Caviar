@@ -229,6 +229,16 @@ contract CaviarFeeManager is OwnableUpgradeable {
         caviar = _caviar;
     }
 
+    function setUSDR(address _usdr) external onlyOwner {
+        require(_usdr != address(0), 'addr 0');
+        usdr = _usdr;
+    }
+
+    function setUSDC(address _usdc) external onlyOwner {
+        require(_usdc != address(0), 'addr 0');
+        usdc = _usdc;
+    }
+
     function setPearlPair(address _pair) external onlyOwner {
         require(_pair != address(0), 'addr 0');
         pearlPair = _pair;
