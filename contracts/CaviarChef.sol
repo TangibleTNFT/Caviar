@@ -219,7 +219,7 @@ contract CaviarChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         emit Withdraw(msg.sender, amount, to);
     }
 
-    function harvest(address to) public {
+    function harvest(address to) public nonReentrant {
         updatePool();
         UserInfo storage user = userInfo[msg.sender];
         int256 accumulatedReward = int256(user.amount.mul(accRewardPerShare) / ACC_REWARD_PRECISION);
