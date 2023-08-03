@@ -261,7 +261,7 @@ contract CaviarFeeManager is OwnableUpgradeable {
         if(treasury != address(0)) {
             _swapUsdrToUsdc(_amountTngbl);
             uint256 _usdcBalance = IERC20(usdc).balanceOf(address(this));
-            IERC20(caviar).safeTransfer(treasury, _usdcBalance);
+            IERC20(usdc).safeTransfer(treasury, _usdcBalance);
         }
     }
 
@@ -287,15 +287,16 @@ contract CaviarFeeManager is OwnableUpgradeable {
         }
 
         uint256 _amountSecondReward = _amountLeft.mul(_caviarBalance).div(_caviarTotal);
-        uint256 _amountStaking = _amountLeft.mul(_caviarStaked).div(_caviarTotal);
-
-        IERC20(caviar).safeApprove(caviarChef, 0);
-        IERC20(caviar).safeApprove(caviarChef, _amountStaking);
-        ICaviarChef(caviarChef).seedRewards(_amountStaking);
         
         if(pairSecondRewarder != address(0)) {
             IERC20(caviar).safeTransfer(pairSecondRewarder, _amountSecondReward);
         }
+
+        _swapToUSDR(caviar);
+        uint256 _usdrBalance = IERC20(usdr).balanceOf(address(this));
+        IERC20(usdr).safeApprove(caviarChef, 0);
+        IERC20(usdr).safeApprove(caviarChef, _usdrBalance);
+        ICaviarChef(caviarChef).seedRewards(_usdrBalance);
     }
 
     function emergencyWithdraw(address _token) external onlyOwner {
