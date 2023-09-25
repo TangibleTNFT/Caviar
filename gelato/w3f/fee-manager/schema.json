@@ -1,0 +1,19 @@
+{
+    "web3FunctionVersion": "2.0.0",
+    "runtime": "js-1.0",
+    "memory": 128,
+    "timeout": 30,
+    "userArgs": {
+        "useAggregator": "boolean",
+        "usdcAddress": "string",
+        "usdrAddress": "string",
+        "wusdrAddress": "string",
+        "pearlPairFactoryAddress": "string",
+        "pearlRouterAddress": "string",
+        "pearlVEAPIAddress": "string",
+        "feeManagerAddress": "string",
+        "managerAddress": "string",
+        "strategyAddress": "string"
+    }
+  }
+  

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 interface IVePearl {
 
@@ -57,4 +57,6 @@ interface IVePearl {
     function merge(uint _from, uint _to) external;
     function split(uint[] memory amounts, uint _tokenId) external;
     function approve(address _approved, uint _tokenId) external;
+
+    function tokenId() external view returns (uint256);
 }

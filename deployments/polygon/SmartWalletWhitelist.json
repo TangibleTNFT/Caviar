@@ -1,0 +1,283 @@
+{
+  "address": "0x424740bBfDf781AAE5ac7dFFc93fb417DD24C9FF",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "ApproveWallet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "RevokeWallet",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "applySetChecker",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_wallet",
+          "type": "address"
+        }
+      ],
+      "name": "approveWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        }
+      ],
+      "name": "changeAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_wallet",
+          "type": "address"
+        }
+      ],
+      "name": "check",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "checker",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_checker",
+          "type": "address"
+        }
+      ],
+      "name": "commitSetChecker",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "future_checker",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_wallet",
+          "type": "address"
+        }
+      ],
+      "name": "revokeWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "wallets",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xce067838722999dae2b4b8398697f941246e2a8a7ae7e0cdbba1ad884de1fd0e",
+  "receipt": {
+    "to": null,
+    "from": "0x3d41487A3c5662eDE90D0eE8854f3cC59E8D66AD",
+    "contractAddress": "0x424740bBfDf781AAE5ac7dFFc93fb417DD24C9FF",
+    "transactionIndex": 9,
+    "gasUsed": "385209",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000000000000000000000000000000000000000000000000100000080000000000000000000004000000000000000000000000000000000000000000000000000000000200000080000000000000000000000000000000000000000000020000000004000000000000000000001000000000000000000000000000000100000000000000000000000000000020000000000000000000000000000000000000000100000",
+    "blockHash": "0xbf3f8a1fa1da229cf0a02ac0d2da2b912ff66b4ed4966ef67a66d058937078c4",
+    "transactionHash": "0xce067838722999dae2b4b8398697f941246e2a8a7ae7e0cdbba1ad884de1fd0e",
+    "logs": [
+      {
+        "transactionIndex": 9,
+        "blockNumber": 46393059,
+        "transactionHash": "0xce067838722999dae2b4b8398697f941246e2a8a7ae7e0cdbba1ad884de1fd0e",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x0000000000000000000000003d41487a3c5662ede90d0ee8854f3cc59e8d66ad",
+          "0x000000000000000000000000eedba2484aaf940f37cd3cd21a5d7c4a7dafbfc0"
+        ],
+        "data": "0x000000000000000000000000000000000000000000000000004b82751b411c7a0000000000000000000000000000000000000000000000023a0b7a19b4155b30000000000000000000000000000000000000000000008f06a7ecb9b6a2b8eaf100000000000000000000000000000000000000000000000239bff7a498d43eb6000000000000000000000000000000000000000000008f06a8383c2bbdfa076b",
+        "logIndex": 33,
+        "blockHash": "0xbf3f8a1fa1da229cf0a02ac0d2da2b912ff66b4ed4966ef67a66d058937078c4"
+      }
+    ],
+    "blockNumber": 46393059,
+    "cumulativeGasUsed": "1844161",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x3d41487A3c5662eDE90D0eE8854f3cC59E8D66AD"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "86e00afdc895160500102f5d355ac69a",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"ApproveWallet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"RevokeWallet\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"applySetChecker\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wallet\",\"type\":\"address\"}],\"name\":\"approveWallet\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"}],\"name\":\"changeAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wallet\",\"type\":\"address\"}],\"name\":\"check\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"checker\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_checker\",\"type\":\"address\"}],\"name\":\"commitSetChecker\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"future_checker\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wallet\",\"type\":\"address\"}],\"name\":\"revokeWallet\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"wallets\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/SmartWalletWhitelist.sol\":\"SmartWalletWhitelist\"},\"evmVersion\":\"paris\",\"libraries\":{\":__CACHE_BREAKER__\":\"0x00000000d41867734bbee4c6863d9255b2b06ac1\"},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":2000},\"remappings\":[]},\"sources\":{\"contracts/SmartWalletWhitelist.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.19;\\n\\ninterface SmartWalletChecker {\\n    function check(address) external view returns (bool);\\n}\\n\\ncontract SmartWalletWhitelist {\\n    \\n    mapping(address => bool) public wallets;\\n    address public admin;\\n    address public checker;\\n    address public future_checker;\\n    \\n    event ApproveWallet(address);\\n    event RevokeWallet(address);\\n    \\n    constructor(address _admin) {\\n        admin = _admin;\\n    }\\n    \\n    function commitSetChecker(address _checker) external {\\n        require(msg.sender == admin, \\\"!admin\\\");\\n        future_checker = _checker;\\n    }\\n\\n    function changeAdmin(address _admin) external {\\n        require(msg.sender == admin, \\\"!admin\\\");\\n        admin = _admin;\\n    }\\n    \\n    function applySetChecker() external {\\n        require(msg.sender == admin, \\\"!admin\\\");\\n        checker = future_checker;\\n    }\\n    \\n    function approveWallet(address _wallet) public {\\n        require(msg.sender == admin, \\\"!admin\\\");\\n        wallets[_wallet] = true;\\n        \\n        emit ApproveWallet(_wallet);\\n    }\\n    function revokeWallet(address _wallet) external {\\n        require(msg.sender == admin, \\\"!admin\\\");\\n        wallets[_wallet] = false;\\n        \\n        emit RevokeWallet(_wallet);\\n    }\\n    \\n    function check(address _wallet) external view returns (bool) {\\n        bool _check = wallets[_wallet];\\n        if (_check) {\\n            return _check;\\n        } else {\\n            if (checker != address(0)) {\\n                return SmartWalletChecker(checker).check(_wallet);\\n            }\\n        }\\n        return false;\\n    }\\n}\",\"keccak256\":\"0x226d67c622abd66173d96250e91bb9834bf79f7645a62bb45a85876d2821540f\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161062438038061062483398101604081905261002f91610054565b600180546001600160a01b0319166001600160a01b0392909216919091179055610084565b60006020828403121561006657600080fd5b81516001600160a01b038116811461007d57600080fd5b9392505050565b610591806100936000396000f3fe608060405234801561001057600080fd5b50600436106100be5760003560e01c80638fcdecc811610076578063c23697a81161005b578063c23697a81461017c578063cf5303cf1461018f578063f851a440146101a257600080fd5b80638fcdecc81461013e578063943f35a41461016957600080fd5b8063808a9d40116100a7578063808a9d40146100e057806389b08f11146100f35780638f2839701461012b57600080fd5b80630fcb0ae5146100c357806326b42b1a146100d8575b600080fd5b6100d66100d1366004610510565b6101b5565b005b6100d6610256565b6100d66100ee366004610510565b6102ca565b610116610101366004610510565b60006020819052908152604090205460ff1681565b60405190151581526020015b60405180910390f35b6100d6610139366004610510565b61035c565b600354610151906001600160a01b031681565b6040516001600160a01b039091168152602001610122565b6100d6610177366004610510565b6103ce565b61011661018a366004610510565b610440565b600254610151906001600160a01b031681565b600154610151906001600160a01b031681565b6001546001600160a01b031633146101fd5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064015b60405180910390fd5b6001600160a01b03811660008181526020818152604091829020805460ff1916600117905590519182527fc1e7aae3f3125e58cfc69ab2a872a655dbb9427614aa85b29bb5abeaca4d6a9291015b60405180910390a150565b6001546001600160a01b031633146102995760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6003546002805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b03909216919091179055565b6001546001600160a01b0316331461030d5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6001600160a01b03811660008181526020818152604091829020805460ff1916905590519182527f1b676c3cc753786cb95aff57280fd7406f1da74e2a8b9755fdd395aded3e16dd910161024b565b6001546001600160a01b0316331461039f5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6001805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b6001546001600160a01b031633146104115760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6003805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b6001600160a01b03811660009081526020819052604081205460ff1680156104685792915050565b6002546001600160a01b031615610507576002546040517fc23697a80000000000000000000000000000000000000000000000000000000081526001600160a01b0385811660048301529091169063c23697a890602401602060405180830381865afa1580156104dc573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105009190610539565b9392505050565b50600092915050565b60006020828403121561052257600080fd5b81356001600160a01b038116811461050057600080fd5b60006020828403121561054b57600080fd5b8151801515811461050057600080fdfea264697066735822122008bdc59499e882242286e64c80ba545e7bba02a8600772a4a11698d9152f2a5464736f6c63430008130033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100be5760003560e01c80638fcdecc811610076578063c23697a81161005b578063c23697a81461017c578063cf5303cf1461018f578063f851a440146101a257600080fd5b80638fcdecc81461013e578063943f35a41461016957600080fd5b8063808a9d40116100a7578063808a9d40146100e057806389b08f11146100f35780638f2839701461012b57600080fd5b80630fcb0ae5146100c357806326b42b1a146100d8575b600080fd5b6100d66100d1366004610510565b6101b5565b005b6100d6610256565b6100d66100ee366004610510565b6102ca565b610116610101366004610510565b60006020819052908152604090205460ff1681565b60405190151581526020015b60405180910390f35b6100d6610139366004610510565b61035c565b600354610151906001600160a01b031681565b6040516001600160a01b039091168152602001610122565b6100d6610177366004610510565b6103ce565b61011661018a366004610510565b610440565b600254610151906001600160a01b031681565b600154610151906001600160a01b031681565b6001546001600160a01b031633146101fd5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064015b60405180910390fd5b6001600160a01b03811660008181526020818152604091829020805460ff1916600117905590519182527fc1e7aae3f3125e58cfc69ab2a872a655dbb9427614aa85b29bb5abeaca4d6a9291015b60405180910390a150565b6001546001600160a01b031633146102995760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6003546002805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b03909216919091179055565b6001546001600160a01b0316331461030d5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6001600160a01b03811660008181526020818152604091829020805460ff1916905590519182527f1b676c3cc753786cb95aff57280fd7406f1da74e2a8b9755fdd395aded3e16dd910161024b565b6001546001600160a01b0316331461039f5760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6001805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b6001546001600160a01b031633146104115760405162461bcd60e51b815260206004820152600660248201526510b0b236b4b760d11b60448201526064016101f4565b6003805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b6001600160a01b03811660009081526020819052604081205460ff1680156104685792915050565b6002546001600160a01b031615610507576002546040517fc23697a80000000000000000000000000000000000000000000000000000000081526001600160a01b0385811660048301529091169063c23697a890602401602060405180830381865afa1580156104dc573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105009190610539565b9392505050565b50600092915050565b60006020828403121561052257600080fd5b81356001600160a01b038116811461050057600080fd5b60006020828403121561054b57600080fd5b8151801515811461050057600080fdfea264697066735822122008bdc59499e882242286e64c80ba545e7bba02a8600772a4a11698d9152f2a5464736f6c63430008130033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 13896,
+        "contract": "contracts/SmartWalletWhitelist.sol:SmartWalletWhitelist",
+        "label": "wallets",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 13898,
+        "contract": "contracts/SmartWalletWhitelist.sol:SmartWalletWhitelist",
+        "label": "admin",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 13900,
+        "contract": "contracts/SmartWalletWhitelist.sol:SmartWalletWhitelist",
+        "label": "checker",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "astId": 13902,
+        "contract": "contracts/SmartWalletWhitelist.sol:SmartWalletWhitelist",
+        "label": "future_checker",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      }
+    }
+  }
+}

@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity 0.8.19;
 
 interface IPearlPair {
+    struct Observation {
+        uint256 timestamp;
+        uint256 reserve0Cumulative;
+        uint256 reserve1Cumulative;
+    }
+
     function metadata() external view returns (uint dec0, uint dec1, uint r0, uint r1, bool st, address t0, address t1);
     function claimFees() external returns (uint, uint);
     function tokens() external view returns (address, address);
@@ -30,4 +36,9 @@ interface IPearlPair {
     function token1() external view returns(address);
     function reserve1() external view returns(uint256);
     function decimals1() external view returns(uint256);
+
+    function currentCumulativePrices() external view returns (uint256 _reserve0Cumulative, uint256 _reserve1Cumulative, uint256 _blockTimestamp);
+    function lastObservation() external view returns (Observation memory);
+    function observationLength() external view returns (uint256);
+    function observations(uint256 _index) external view returns(Observation memory);
 }

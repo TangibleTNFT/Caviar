@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./interfaces/IVePearl.sol";
 import "./interfaces/IVoter.sol";
+import "./interfaces/IPearlGauge.sol";
 import "./interfaces/IRewardsDistributor.sol";
 import "./interfaces/ICaviarManager.sol";
 import "./interfaces/IPearlBribes.sol";
@@ -23,19 +23,20 @@ contract CaviarStrategy is OwnableUpgradeable {
     using SafeMath for uint256;
 
     string public __NAME__;
-    struct VoteInfo{
+    struct VoteInfo {
         address[] pairs;
         uint256[] weights;
     }
-    
+
     VoteInfo lastVote;
-    
+
     address public vePearl;
     address public pearl;
     address public caviarManager;
     address public pearlVoter;
     address public feeManager;
     address public pearlRewardsDistributor;
+    address public cvrPearlGauge;
 
     mapping(address => bool) isBoostStrategy;
     mapping(address => bool) public isAllowedVoter;
@@ -46,13 +47,20 @@ contract CaviarStrategy is OwnableUpgradeable {
 
     mapping(uint256 => uint256) public tokenIdAt;
     mapping(uint256 => VoteInfo) voteInfoAt;
+    mapping(address => bool) public isKeeper;
+    mapping(address => uint256) public lastBribe;
+    address[] public bribeTokens;
 
     address public manualFeeManager;
     bool public isManual;
 
     event Merge(uint256 indexed from);
+    event KeeperAdded(address indexed keeper);
+    event KeeperRemoved(address indexed keeper);
 
-    constructor() public {}
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(
         string memory _name,
@@ -61,15 +69,15 @@ contract CaviarStrategy is OwnableUpgradeable {
         address _pearlVoter,
         address _feeManager,
         address _pearlRewardsDistributor,
-        uint _lockingYear   // eg.: crv = 4, lqdr = 2
+        uint _lockingYear // eg.: crv = 4, lqdr = 2
     ) public initializer {
         __Ownable_init();
         __NAME__ = _name;
 
         pearl = _pearl;
         vePearl = _vePearl;
-        require(_pearl == IVePearl(vePearl).token(), 'not same token');
-        
+        require(_pearl == IVePearl(vePearl).token(), "not same token");
+
         pearlVoter = _pearlVoter;
         feeManager = _feeManager;
         pearlRewardsDistributor = _pearlRewardsDistributor;
@@ -78,18 +86,23 @@ contract CaviarStrategy is OwnableUpgradeable {
         WEEK = 7 * 86400;
     }
 
-    modifier restricted {
+    modifier restricted() {
         require(msg.sender == owner() || msg.sender == caviarManager, "Auth failed");
         _;
     }
 
-    modifier ownerOrAllowedVoter {
+    modifier ownerOrAllowedVoter() {
         require(msg.sender == owner() || isAllowedVoter[msg.sender], "Permission denied");
         _;
     }
 
     function getLastVote() external view returns (VoteInfo memory) {
         return lastVote;
+    }
+
+    modifier keeper() {
+        require(isKeeper[msg.sender] == true || msg.sender == owner(), "not keeper");
+        _;
     }
 
     /*
@@ -99,18 +112,38 @@ contract CaviarStrategy is OwnableUpgradeable {
     */
 
     function setVoter(address _voter) external onlyOwner {
-        require(_voter != address(0), 'addr 0');
+        require(_voter != address(0), "addr 0");
         pearlVoter = _voter;
     }
 
+    function setcvrPearlGauge(address _cvrPearlGauge) external onlyOwner {
+        require(_cvrPearlGauge != address(0), "addr 0");
+        cvrPearlGauge = _cvrPearlGauge;
+    }
+
     function setPearlRewardsDistributor(address _pearlRewardsDistributor) external onlyOwner {
-        require(_pearlRewardsDistributor != address(0), 'addr 0');
+        require(_pearlRewardsDistributor != address(0), "addr 0");
         pearlRewardsDistributor = _pearlRewardsDistributor;
     }
 
     function setCaviarManager(address _manager) external onlyOwner {
-        require(_manager != address(0), 'addr 0');
+        require(_manager != address(0), "addr 0");
         caviarManager = _manager;
+    }
+
+    function setPearl(address _pearl) external onlyOwner {
+        require(_pearl != address(0), "addr 0");
+        pearl = _pearl;
+    }
+
+    function setVEPearl(address _vePearl) external onlyOwner {
+        require(_vePearl != address(0), "addr 0");
+        vePearl = _vePearl;
+    }
+
+    function setPearlVoter(address _pearlVoter) external onlyOwner {
+        require(_pearlVoter != address(0), "addr 0");
+        pearlVoter = _pearlVoter;
     }
 
     function whitelistVoter(address _voter) external onlyOwner {
@@ -122,12 +155,26 @@ contract CaviarStrategy is OwnableUpgradeable {
     }
 
     function setManualFeeManager(address _manager) external onlyOwner {
-        require(_manager != address(0), 'addr 0');
+        require(_manager != address(0), "addr 0");
         manualFeeManager = _manager;
     }
 
     function setIsManual(bool _isManual) external onlyOwner {
         isManual = _isManual;
+    }
+
+    function addKeeper(address _keeper) external onlyOwner {
+        require(_keeper != address(0));
+        require(isKeeper[_keeper] == false);
+        isKeeper[_keeper] = true;
+        emit KeeperAdded(_keeper);
+    }
+
+    function removeKeeper(address _keeper) external onlyOwner {
+        require(_keeper != address(0));
+        require(isKeeper[_keeper] == true);
+        isKeeper[_keeper] = false;
+        emit KeeperRemoved(_keeper);
     }
 
     /*  
@@ -137,6 +184,7 @@ contract CaviarStrategy is OwnableUpgradeable {
     */
 
     function createLock(uint256 _amount, uint256 _unlockTime) external restricted {
+        require(tokenId == 0, "Already locked");
         uint256 _balance = IERC20(pearl).balanceOf(address(this));
         require(_amount <= _balance, "Amount exceeds balance");
         IERC20(pearl).safeApprove(vePearl, 0);
@@ -149,6 +197,10 @@ contract CaviarStrategy is OwnableUpgradeable {
     }
 
     function increaseAmount(uint256 _amount) external restricted {
+        _increaseAmount(_amount);
+    }
+
+    function _increaseAmount(uint256 _amount) internal {
         uint256 _balance = IERC20(pearl).balanceOf(address(this));
         require(_amount <= _balance, "Amount exceeds pearl balance");
         IERC20(pearl).safeApprove(vePearl, 0);
@@ -160,7 +212,7 @@ contract CaviarStrategy is OwnableUpgradeable {
         IVePearl(vePearl).increase_unlock_time(tokenId, _unlockTime);
     }
 
-    function increaseTime(uint256 _unlockTime) external onlyOwner {
+    function increaseTime(uint256 _unlockTime) external ownerOrAllowedVoter {
         _increaseTime(_unlockTime);
     }
 
@@ -169,7 +221,8 @@ contract CaviarStrategy is OwnableUpgradeable {
     }
 
     function balanceOfVePearl() public view returns (uint256) {
-        return IVePearl(vePearl).balanceOfNFT(tokenId);
+        (int128 amount, ) = IVePearl(vePearl).locked(tokenId);
+        return uint256(uint128(amount));
     }
 
     /*  
@@ -178,27 +231,33 @@ contract CaviarStrategy is OwnableUpgradeable {
         -------------------
     */
 
-    function claimBribe(
-        address[] memory _bribes,
-        address[][] memory _tokens
-    ) external {
-        IVoter(pearlVoter).claimBribes(_bribes, _tokens, tokenId);
+    function claimBribe(address[] memory _bribes, address[][] memory _tokens) external keeper {
+        // clear previous bribe data:
         uint256 i = 0;
+        for (; i < bribeTokens.length; ++i) {
+            delete lastBribe[bribeTokens[i]];
+        }
+        delete bribeTokens;
+
+        // claim new vote:
+        IVoter(pearlVoter).claimBribes(_bribes, _tokens, tokenId);
+        i = 0;
         uint256 k = 0;
         uint256 _len1 = _bribes.length;
         uint256 _len2;
         uint256 _amount = 0;
         address _token;
-        for(i; i < _len1; i++){
+        for (i; i < _len1; i++) {
             _len2 = _tokens[i].length;
-            for(k = 0; k < _len2; k++){
+            for (k = 0; k < _len2; k++) {
                 _token = _tokens[i][k];
                 _amount = IERC20(_token).balanceOf(address(this));
-                if(_amount > 0){
+                if (_amount != 0) {
+                    lastBribe[_token] = _amount;
+                    bribeTokens.push(_token);
                     if (isManual && manualFeeManager != address(0)) {
                         IERC20(_token).safeTransfer(manualFeeManager, _amount);
-                    }
-                    else {
+                    } else {
                         IERC20(_token).safeTransfer(feeManager, _amount);
                     }
                 }
@@ -206,7 +265,7 @@ contract CaviarStrategy is OwnableUpgradeable {
         }
     }
 
-    function claimFees(address[] memory _fees, address[][] memory _tokens) external {
+    function claimFee(address[] memory _fees, address[][] memory _tokens) external keeper {
         IVoter(pearlVoter).claimFees(_fees, _tokens, tokenId);
         uint256 i = 0;
         uint256 k = 0;
@@ -214,16 +273,15 @@ contract CaviarStrategy is OwnableUpgradeable {
         uint256 _len2;
         uint256 _amount = 0;
         address _token;
-        for(i; i < _len1; i++){
+        for (i; i < _len1; i++) {
             _len2 = _tokens[i].length;
-            for(k = 0; k < _len2; k++){
+            for (k = 0; k < _len2; k++) {
                 _token = _tokens[i][k];
                 _amount = IERC20(_token).balanceOf(address(this));
-                if(_amount > 0){
+                if (_amount != 0) {
                     if (isManual && manualFeeManager != address(0)) {
                         IERC20(_token).safeTransfer(manualFeeManager, _amount);
-                    }
-                    else {
+                    } else {
                         IERC20(_token).safeTransfer(feeManager, _amount);
                     }
                 }
@@ -275,7 +333,6 @@ contract CaviarStrategy is OwnableUpgradeable {
 
     function splitAndSend(uint256 _toSplit, address _to) external restricted {
         _resetVote();
-        uint256 _totalNftBefore = IVePearl(vePearl).balanceOf(address(this));
         uint256 _totalBalance = balanceOfVePearl();
         uint256 _totalBalanceAfter = _totalBalance.sub(_toSplit);
         uint256[] memory _amounts = new uint[](2);
@@ -283,21 +340,9 @@ contract CaviarStrategy is OwnableUpgradeable {
         _amounts[1] = _toSplit;
 
         IVePearl(vePearl).split(_amounts, tokenId);
+        uint256 _splitTokenId = IVePearl(vePearl).tokenId();
 
-        uint256 _totalNftAfter = IVePearl(vePearl).balanceOf(address(this));
-        require(_totalNftAfter == _totalNftBefore + 1, "Failed split.");
-
-        uint256 _tokenId1 = IVePearl(vePearl).tokenOfOwnerByIndex(
-            address(this),
-            _totalNftAfter - 1
-        );
-        uint256 _tokenId0 = IVePearl(vePearl).tokenOfOwnerByIndex(
-            address(this), 
-            _totalNftAfter - 2
-        );
-
-        tokenId = _tokenId0;
-        IVePearl(vePearl).transferFrom(address(this), _to, _tokenId1);
+        IVePearl(vePearl).transferFrom(address(this), _to, _splitTokenId);
 
         _pokeVote();
     }
