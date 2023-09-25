@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./interfaces/IRouter01.sol";
 import "./interfaces/IPearlPair.sol";
 import "./interfaces/ICaviarChef.sol";
 
@@ -19,283 +18,320 @@ contract CaviarFeeManager is OwnableUpgradeable {
     string public __NAME__;
     uint256 constant FEE_MAX = 1000;
     uint256 public FEE_CHEF;
-    uint256 public lastRewardTime;
 
-    address public masterchef;
     address public treasury;
+    address public incentiveVault;
+
     address[] public tokens;
 
     address public pairFactory;
-    address public router;
     address public caviarManager;
 
     mapping(address => bool) public isToken;
-    mapping(address => uint256) internal tokenPos;
-    mapping(address => IRouter01.route) public tokenToRoutes;
     mapping(address => bool) public isKeeper;
 
     address public caviar;
     address public usdr;
     address public usdc;
-
-    mapping(address => IRouter01.route[]) public routes;
-    IRouter01.route[] public usdrToUsdcRoute;
+    address public wusdr;
 
     uint256 public feeStaking;
     uint256 public feeTngbl;
     uint256 public feeRebaseVault;
     uint256 public feeMultiplier;
+    uint256 public pendingTngblFee;
 
-    address public pairSecondReward;
-    address public caviarChef;
+    uint256 public lastStakingRebase;
+    uint256 public lastLPRebase;
+
+    address public stakingChef;
+    address public rebaseChef;
+    address public lpChef;
 
     address public pearlPair;
 
-    address public pairSecondRewarder;
+    event TokenConverted(address indexed token, uint256 amount, uint256 amountOut);
+    event TokenAdded(address indexed token);
+    event TokenRemoved(address indexed token);
+    event KeeperAdded(address indexed keeper);
+    event KeeperRemoved(address indexed keeper);
+    event FeesDistributed(address indexed token, uint256 amount, address indexed receiver);
+    event EmergencyWithdrawal(address indexed token, uint256 amount);
 
-    address public incentiveVault;
-
-    modifier keeper {
-        require(isKeeper[msg.sender] == true || msg.sender == owner(), 'not keeper');
+    modifier keeper() {
+        require(isKeeper[msg.sender] == true || msg.sender == owner(), "not keeper");
         _;
     }
-    
-    modifier restricted {
-        require(msg.sender == caviarManager || msg.sender == owner(), 'not auth');
+
+    modifier restricted() {
+        require(msg.sender == caviarManager || msg.sender == owner(), "not auth");
         _;
     }
-    
-    constructor() public {}
-    
-    function initialize(
-        string memory _name
-    ) public initializer {
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(string memory _name) public initializer {
         __Ownable_init();
         __NAME__ = _name;
     }
 
-    function notifyRewards() external keeper {
-        uint256 _before = IERC20(usdr).balanceOf(address(this));
-        uint256 i;
-        
-        for (i = 0; i < tokens.length; i ++) {
-            address _token = tokens[i];
+    /**
+     * @notice Checks if there are any convertible rewards.
+     * @return _canConvert Indicates if conversion is possible.
+     * @return _token Token to convert.
+     * @return _amount Amount to convert.
+     */
+    function checkConvertibleRewards() external view returns (bool _canConvert, address _token, uint256 _amount) {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            _token = tokens[i];
             if (isToken[_token]) {
-                _swapToUSDR(_token);
-            }
-        }
-        uint256 _after = IERC20(usdr).balanceOf(address(this));
-        uint256 _notified = _after - _before;
-
-        if (_notified > 0) {
-            _distributeFees(_notified);
-        }
-    }
-    
-    function swapToUSDR(address _token) public restricted {
-        _swapToUSDR(_token);
-    }
-
-    function _swapToUSDR(address _token) internal {
-        uint256 i;
-        for (i = 0; i < routes[_token].length; i++) {
-            IRouter01.route[] memory _routes = new IRouter01.route[](1);
-            _routes[0] = routes[_token][i];
-            address _from = _routes[0].from;
-            uint256 _balance = IERC20(_from).balanceOf(address(this));
-            IERC20(_from).safeApprove(router, 0);
-            IERC20(_from).safeApprove(router, _balance);
-            if (_balance > 0) {
-                IRouter01(router).swapExactTokensForTokens(
-                    _balance, 
-                    0, 
-                    _routes, 
-                    address(this), 
-                    block.timestamp
-                );
+                _amount = IERC20(_token).balanceOf(address(this));
+                if (_amount != 0) {
+                    _canConvert = true;
+                    break;
+                }
             }
         }
     }
 
-    function _swapUsdrToUsdc(uint256 _amount) internal {
-        uint256 i;
-        for (i = 0; i < usdrToUsdcRoute.length; i++) {
-            IRouter01.route[] memory _routes = new IRouter01.route[](1);
-            _routes[0] = usdrToUsdcRoute[i];
-            address _from = _routes[0].from;
-
-            uint256 _balance = IERC20(_from).balanceOf(address(this));
-            
-            if (_from == usdr) {
-                _balance = _amount;
-            }
-
-            IERC20(_from).safeApprove(router, 0);
-            IERC20(_from).safeApprove(router, _balance);
-            if (_balance > 0) {
-                IRouter01(router).swapExactTokensForTokens(
-                    _balance, 
-                    0, 
-                    _routes, 
-                    address(this), 
-                    block.timestamp
-                );
-            }
+    /**
+     * @notice Converts a specific reward token to USDR.
+     * @param _token Token to convert.
+     * @param _amount Amount to convert.
+     * @param _target Target address for conversion.
+     * @param _data Call data for conversion.
+     */
+    function convertRewardToken(address _token, uint256 _amount, address _target, bytes calldata _data) external keeper {
+        require(isToken[_token], "invalid reward token");
+        uint256 _before = IERC20(_token).balanceOf(address(this));
+        uint256 _swapAmount = _amount == 0 ? _before : _amount;
+        require(_before >= _swapAmount, "balance too low");
+        uint256 _amountOut;
+        if (_token != usdr) {
+            _amountOut = _convertToken(_token, usdr, _swapAmount, _target, _data);
+            require(_amountOut != 0, "insufficient output amount");
+            uint256 _after = IERC20(_token).balanceOf(address(this));
+            require(_after == _before - _swapAmount, "invalid input amount");
+        } else {
+            _amountOut = _amount;
         }
+        emit TokenConverted(_token, _swapAmount, _amountOut);
+
+        IERC20(usdr).safeApprove(wusdr, _amountOut);
+        _amountOut = ERC4626(wusdr).deposit(_amountOut, address(this));
+
+        _distributeStakingFees(_amountOut);
     }
 
-    function addRewardToken(IRouter01.route[] memory _route) public onlyOwner {
-        // require(!isToken[_route[0].from], "Already added");
-        if (isToken[_route[0].from]) {
-            delete routes[_route[0].from];
-            for (uint i; i < _route.length; i++) {
-                routes[_route[0].from].push(_route[i]);
-            }
-        }
-        else {
-            for (uint i; i < _route.length; i++) {
-                routes[_route[0].from].push(_route[i]);
-            }
-            isToken[_route[0].from] = true;
-            tokens.push(_route[0].from);
-        }
+    function _convertToken(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amount,
+        address _target,
+        bytes calldata _data
+    ) internal returns (uint256 _amountOut) {
+        uint256 _before = IERC20(_tokenOut).balanceOf(address(this));
+        IERC20(_tokenIn).safeApprove(_target, 0);
+        IERC20(_tokenIn).safeApprove(_target, _amount);
+        (bool _success, ) = _target.call(_data);
+        require(_success, "low swap level call failed");
+        _amountOut = IERC20(_tokenOut).balanceOf(address(this)) - _before;
     }
 
-    function deleteRewardToken(address _token) external onlyOwner {
-        require(isToken[_token], "Token is not enabled!!");
-        delete routes[_token];
-    }
-
-    function enableRewardToken(address _token) external onlyOwner {
+    function addRewardToken(address _token) public onlyOwner {
+        require(!isToken[_token], "already added");
         isToken[_token] = true;
+        tokens.push(_token);
+        emit TokenAdded(_token);
     }
 
-    function disableRewardToken(address _token) external onlyOwner {
+    function addRewardTokens(address[] calldata _tokens) external onlyOwner {
+        for (uint _i = 0; _i < _tokens.length; ) {
+            address _token = _tokens[_i];
+            if (!isToken[_token]) {
+                isToken[_token] = true;
+                tokens.push(_token);
+                emit TokenAdded(_token);
+            }
+            unchecked {
+                ++_i;
+            }
+        }
+    }
+
+    function removeRewardToken(address _token) external onlyOwner {
+        require(isToken[_token], "token not added");
         isToken[_token] = false;
+        uint256 _numTokens = tokens.length;
+        for (uint256 _i = 0; _i < _numTokens; _i++) {
+            if (tokens[_i] == _token) {
+                tokens[_i] = tokens[_numTokens - 1];
+                tokens.pop();
+                break;
+            }
+        }
+        emit TokenRemoved(_token);
     }
 
-    function setKeeper(address _keeper) external onlyOwner {
+    function addKeeper(address _keeper) external onlyOwner {
         require(_keeper != address(0));
         require(isKeeper[_keeper] == false);
         isKeeper[_keeper] = true;
+        emit KeeperAdded(_keeper);
     }
 
     function removeKeeper(address _keeper) external onlyOwner {
         require(_keeper != address(0));
         require(isKeeper[_keeper] == true);
         isKeeper[_keeper] = false;
-    }
-    
-    function setRouter(address _router) external onlyOwner {
-        require(_router != address(0), 'addr 0');
-        router = _router;
+        emit KeeperRemoved(_keeper);
     }
 
-    function setCaviarChef(address _caviarChef) external onlyOwner {
-        require(_caviarChef != address(0), 'addr 0');
-        caviarChef = _caviarChef;
+    function setStakingChef(address _stakingChef) external onlyOwner {
+        require(_stakingChef != address(0));
+        stakingChef = _stakingChef;
     }
 
-    function setPairSecondRewarder(address _pairSecondRewarder) external onlyOwner {
-        require(_pairSecondRewarder != address(0), 'addr 0');
-        pairSecondRewarder = _pairSecondRewarder;
+    function setRebaseChef(address _rebaseChef) external onlyOwner {
+        require(_rebaseChef != address(0));
+        rebaseChef = _rebaseChef;
+    }
+
+    function setLPChef(address _lpChef) external onlyOwner {
+        require(_lpChef != address(0));
+        lpChef = _lpChef;
     }
 
     function setTreasury(address _treasury) external onlyOwner {
-        require(_treasury != address(0), 'addr 0');
+        require(_treasury != address(0));
         treasury = _treasury;
     }
 
     function setIncentiveVault(address _vault) external onlyOwner {
-        require(_vault != address(0), 'addr 0');
+        require(_vault != address(0));
         incentiveVault = _vault;
     }
 
     function setCaviarManager(address _caviarManager) external onlyOwner {
-        require(_caviarManager != address(0), 'addr 0');
+        require(_caviarManager != address(0));
         caviarManager = _caviarManager;
     }
 
     function setCaviar(address _caviar) external onlyOwner {
-        require(_caviar != address(0), 'addr 0');
+        require(_caviar != address(0));
         caviar = _caviar;
     }
 
+    function setUSDR(address _usdr) external onlyOwner {
+        require(_usdr != address(0));
+        usdr = _usdr;
+    }
+
+    function setUSDC(address _usdc) external onlyOwner {
+        require(_usdc != address(0));
+        usdc = _usdc;
+    }
+
+    function setWUSDR(address _wusdr) external onlyOwner {
+        require(_wusdr != address(0));
+        wusdr = _wusdr;
+    }
+
     function setPearlPair(address _pair) external onlyOwner {
-        require(_pair != address(0), 'addr 0');
+        require(_pair != address(0));
         pearlPair = _pair;
     }
 
-    function setFees(
-        uint256 _feeStaking, 
-        uint256 _feeTngbl, 
-        uint256 _feeRebaseVault,
-        uint256 _feeMultiplier
-    ) external onlyOwner {
-        require(
-            _feeStaking + _feeTngbl == _feeMultiplier,
-            "Invalid fee values"
-        );
-        require(
-            _feeRebaseVault <= _feeMultiplier,
-            "Invalid fee values"
-        );
+    function setFees(uint256 _feeStaking, uint256 _feeTngbl, uint256 _feeRebaseVault) external onlyOwner {
+        uint256 _feeMultiplier = _feeStaking + _feeTngbl;
+        require(_feeRebaseVault <= _feeMultiplier, "Invalid fee values");
         feeStaking = _feeStaking;
         feeTngbl = _feeTngbl;
         feeRebaseVault = _feeRebaseVault;
         feeMultiplier = _feeMultiplier;
     }
 
-    function _distributeFees(uint256 _amount) internal {
+    function _distributeStakingFees(uint256 _amount) internal {
         uint256 _amountStaking = _amount.mul(feeStaking).div(feeMultiplier);
         uint256 _amountTngbl = _amount.sub(_amountStaking);
 
-        IERC20(usdr).safeApprove(caviarChef, 0);
-        IERC20(usdr).safeApprove(caviarChef, _amountStaking);
-        ICaviarChef(caviarChef).seedRewards(_amountStaking);
+        IERC20(wusdr).safeApprove(stakingChef, _amountStaking);
+        ICaviarChef(stakingChef).seedRewards(_amountStaking);
 
-        if(treasury != address(0)) {
-            _swapUsdrToUsdc(_amountTngbl);
-            uint256 _usdcBalance = IERC20(usdc).balanceOf(address(this));
-            IERC20(caviar).safeTransfer(treasury, _usdcBalance);
-        }
+        pendingTngblFee = pendingTngblFee + _amountTngbl;
+
+        emit FeesDistributed(wusdr, _amountStaking, stakingChef);
     }
 
-    function distributeFees(uint256 _amount) external restricted {
-        _distributeFees(_amount);
+    function distributeStakingFees(uint256 _amount) external restricted {
+        _distributeStakingFees(_amount);
+    }
+
+    function distributeTngblFees(uint256 _amount, address _target, bytes calldata _data) external keeper {
+        require(treasury != address(0));
+        require(_amount == pendingTngblFee, "invalid amount");
+        pendingTngblFee = 0;
+
+        _amount = ERC4626(wusdr).redeem(_amount, address(this), address(this));
+
+        uint256 _amountOut = _convertToken(usdr, usdc, _amount, _target, _data);
+        IERC20(usdc).safeTransfer(treasury, _amountOut);
+        emit FeesDistributed(usdc, _amount, treasury);
+    }
+
+    function distributeEmissions(uint256 _amount) external restricted {
+        IERC20(caviar).safeApprove(lpChef, _amount);
+        ICaviarChef(lpChef).seedRewards(_amount);
     }
 
     function distributeRebaseFees(uint256 _amount) external restricted {
-        uint256 _caviarBalance;
-        if (caviar == IPearlPair(pearlPair).token0()) {
-            _caviarBalance = IPearlPair(pearlPair).reserve0();
-        } else {
-            _caviarBalance = IPearlPair(pearlPair).reserve1();
-        }
-        uint256 _caviarStaked = IERC20(caviar).balanceOf(caviarChef);
-        uint256 _caviarTotal = _caviarBalance.add(_caviarStaked);
-        uint256 _amountVault = _amount.mul(feeRebaseVault).div(feeMultiplier);
+        (uint256 _caviarLP, ) = _getPearlPairReserves();
+        uint256 _caviarRebase = IERC20(caviar).balanceOf(stakingChef);
+
+        // take rebase fee, send to incentive vault:
         uint256 _amountLeft = _amount;
-
-        if(incentiveVault != address(0)) {
-            IERC20(caviar).safeTransfer(incentiveVault, _amountVault);
-            _amountLeft = _amount.sub(_amountVault);
+        if (incentiveVault != address(0)) {
+            uint256 _incentiveAmount = _amount.mul(feeRebaseVault).div(feeMultiplier);
+            IERC20(caviar).safeTransfer(incentiveVault, _incentiveAmount);
+            _amountLeft = _amount.sub(_incentiveAmount);
         }
 
-        uint256 _amountSecondReward = _amountLeft.mul(_caviarBalance).div(_caviarTotal);
-        uint256 _amountStaking = _amountLeft.mul(_caviarStaked).div(_caviarTotal);
-
-        IERC20(caviar).safeApprove(caviarChef, 0);
-        IERC20(caviar).safeApprove(caviarChef, _amountStaking);
-        ICaviarChef(caviarChef).seedRewards(_amountStaking);
-        
-        if(pairSecondRewarder != address(0)) {
-            IERC20(caviar).safeTransfer(pairSecondRewarder, _amountSecondReward);
-        }
+        // for remainder, split between rebase chef and LP:
+        uint256 _caviarTotal = _caviarRebase.add(_caviarLP);
+        uint256 _rebaseAmount = _amountLeft.mul(_caviarRebase).div(_caviarTotal);
+        IERC20(caviar).safeApprove(rebaseChef, _rebaseAmount);
+        ICaviarChef(rebaseChef).seedRewards(_rebaseAmount);
+        lastStakingRebase = _rebaseAmount;
+        _amountLeft = _amountLeft.sub(_rebaseAmount);
+        IERC20(caviar).safeApprove(lpChef, _amountLeft);
+        ICaviarChef(lpChef).seedRewards(_amountLeft);
+        lastLPRebase = _amountLeft;
     }
 
     function emergencyWithdraw(address _token) external onlyOwner {
         uint256 _balance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(msg.sender, _balance);
+        emit EmergencyWithdrawal(_token, _balance);
+    }
+
+    function _getPearlPairReserves() internal view returns (uint256 _caviarReserve, uint256 _pearlReserve) {
+        IPearlPair.Observation memory _observation = IPearlPair(pearlPair).lastObservation();
+        (uint256 _reserve0Cumulative, uint256 _reserve1Cumulative, ) = IPearlPair(pearlPair).currentCumulativePrices();
+        if (block.timestamp == _observation.timestamp) {
+            uint256 _observationLength = IPearlPair(pearlPair).observationLength();
+            _observation = IPearlPair(pearlPair).observations(_observationLength - 2);
+        }
+
+        uint256 timeElapsed = block.timestamp - _observation.timestamp;
+        uint256 _reserve0 = (_reserve0Cumulative - _observation.reserve0Cumulative) / timeElapsed;
+        uint256 _reserve1 = (_reserve1Cumulative - _observation.reserve1Cumulative) / timeElapsed;
+
+        if (caviar == IPearlPair(pearlPair).token0()) {
+            (_caviarReserve, _pearlReserve) = (_reserve0, _reserve1);
+        } else {
+            (_caviarReserve, _pearlReserve) = (_reserve1, _reserve0);
+        }
     }
 }

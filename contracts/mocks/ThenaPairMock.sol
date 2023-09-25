@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.12;
+pragma solidity 0.8.19;
 
 contract PearlPairMock {
   address public token0;
@@ -7,7 +7,7 @@ contract PearlPairMock {
   uint256 public reserve0;
   uint256 public reserve1;
 
-  constructor() public {}
+  constructor() {}
 
   function setTokens(address _token0, address _token1) external {
     token0 = _token0;
